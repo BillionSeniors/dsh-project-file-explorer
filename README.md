@@ -6,6 +6,10 @@ DeepSeek Harness (dsh) 的**项目文件浏览器**插件：右侧停靠项目�
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
+## 演示视频
+
+📺 点击观看插件功能演示视频（哔哩哔哩）：**[【亿哲学长】DeepSeek Harness 项目文件浏览器插件演示](https://www.bilibili.com/video/BV1UUgP6pEm6/)**
+
 ## 功能特性
 
 - **右侧停靠文件树**：点击会话区顶部的「项目文件」按钮，项目文件夹停靠在右侧（可关闭 / 展开，宽度 300-520px 可缩放）
