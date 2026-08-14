@@ -1,5 +1,7 @@
 # dsh-project-file-explorer
 
+> **作者：亿哲学长**（GitHub: [BillionSeniors](https://github.com/BillionSeniors)）· 版权所有，禁止侵权转载
+
 DeepSeek Harness (dsh) 的**项目文件浏览器**插件：右侧停靠项目文件树，点击文件在主会话区打开预览标签，支持代码 / 文本 / 图片 / 音视频 / PDF，窄屏自动降级为右侧抽屉（响应式）。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -178,6 +180,12 @@ dsh 版本升级改变了源码。补丁脚本会明确提示哪一处失败，�
 1. 从 `cordis.patch.yml` 删除 insert 条目
 2. 删除 `~/.dsh/profiles/node_modules/@local/dsh-project-file-explorer/`
 3. （可选）用 git 还原被补丁的两个 `lib/client.js`（`npm i -g @deepseek-ai/dsh` 重装或重新解压对应包）
+
+## 作者
+
+- **亿哲学长**（GitHub: [BillionSeniors](https://github.com/BillionSeniors)）
+- 本插件为原创作品，版权所有。未经作者书面许可，禁止任何形式的转载、盗用或二次发布。
+- 如需商用 / 合作 / 授权，请通过 GitHub 联系作者。
 
 ## License
 
