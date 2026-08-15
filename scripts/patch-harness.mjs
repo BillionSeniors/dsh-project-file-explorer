@@ -69,7 +69,8 @@ function dshHome() {
   return env ? resolve(env) : join(homedir(), ".dsh");
 }
 
-/** 定位 @deepseek-ai 依赖目录（包含目标两个包）。 */
+/** 定位 @deepseek-ai 依赖目录（包含目标两个包）。全部基于环境/默认路径，
+ *  不写死盘符 —— 插件拷贝到 C:/D:/E: 等任意盘符的 dsh 安装上都能找到目标。 */
 function candidateDirs() {
   const dirs = [];
   // Windows 下 Node 无法直接 spawn .cmd，必须 shell:true 才能执行 npm.cmd。
@@ -79,8 +80,12 @@ function candidateDirs() {
     dirs.push(join(root, "@deepseek-ai"));
     dirs.push(join(root, "@deepseek-ai", "dsh", "node_modules", "@deepseek-ai"));
   }
-  const profile = join(dshHome(), "profiles", "web", "node_modules", "@deepseek-ai");
-  dirs.push(profile);
+  // dsh 数据目录（$DSH_HOME，未设置则 ~/.dsh）下的常见布局：
+  //   1) profiles/node_modules/@deepseek-ai        —— install.mjs / README 的标准布局
+  //   2) profiles/web/node_modules/@deepseek-ai     —— 兼容旧版布局
+  const home = dshHome();
+  dirs.push(join(home, "profiles", "node_modules", "@deepseek-ai"));
+  dirs.push(join(home, "profiles", "web", "node_modules", "@deepseek-ai"));
   if (explicitTarget) dirs.push(explicitTarget);
   return dirs;
 }
@@ -88,7 +93,8 @@ function candidateDirs() {
 function locate() {
   const targets = [
     { pkg: "dsh-client-ui-workspace", rel: "lib/client.js" },
-    { pkg: "dsh-client-ui-layout", rel: "lib/client.js" }
+    { pkg: "dsh-client-ui-layout", rel: "lib/client.js" },
+    { pkg: "dsh-client-ui-deliverables", rel: "lib/client.js" }
   ];
   for (const dir of candidateDirs()) {
     if (!existsSync(dir)) continue;
@@ -97,7 +103,7 @@ function locate() {
       const f = resolve(dir, t.pkg, t.rel);
       if (existsSync(f)) found[t.pkg] = f;
     }
-    if (found["dsh-client-ui-workspace"] && found["dsh-client-ui-layout"]) return found;
+    if (found["dsh-client-ui-workspace"] && found["dsh-client-ui-layout"] && found["dsh-client-ui-deliverables"]) return found;
   }
   return null;
 }
@@ -311,11 +317,44 @@ mobileDrawer && (0, react_jsx_runtime.jsxs)(react_jsx_runtime.Fragment, { childr
 ];
 
 // ---------------------------------------------------------------------------
+// 3) dsh-client-ui-deliverables —— 内置「产物」文件链接改为主区标签打开
+//    （dsh-project-file-explorer 提供 window.__projectFileExplorerOpen 时走它，
+//    否则退回系统默认应用打开；「在文件夹中显示」保持系统打开）
+// ---------------------------------------------------------------------------
+
+const DELIVERABLES_PATCHES = [
+  {
+    marker: "dsh-project-file-explorer: deliverables-open-mention",
+    find: `open: () => {
+\topenFile(path);
+},`,
+    replace: `open: () => {
+\t/* dsh-project-file-explorer: deliverables-open-mention —— 文件链接改为主区标签打开（带改动标注） */
+\t(typeof window !== "undefined" && typeof window.__projectFileExplorerOpen === "function")
+\t\t? window.__projectFileExplorerOpen(path)
+\t\t: openFile(path);
+},`
+  },
+  {
+    marker: "dsh-project-file-explorer: deliverables-open-row",
+    find: `onClick: () => {
+\topenFile(path);
+},`,
+    replace: `onClick: () => {
+\t/* dsh-project-file-explorer: deliverables-open-row —— 产物行文件链接改为主区标签打开 */
+\t(typeof window !== "undefined" && typeof window.__projectFileExplorerOpen === "function")
+\t\t? window.__projectFileExplorerOpen(path)
+\t\t: openFile(path);
+},`
+  }
+];
+
+// ---------------------------------------------------------------------------
 
 function run() {
   const targets = locate();
   if (!targets) {
-    console.error("✗ 未找到 @deepseek-ai/dsh 的依赖目录（dsh-client-ui-workspace / dsh-client-ui-layout）。");
+    console.error("✗ 未找到 @deepseek-ai/dsh 的依赖目录（dsh-client-ui-workspace / dsh-client-ui-layout / dsh-client-ui-deliverables）。");
     console.error("  请先安装 DeepSeek Harness： npm install -g @deepseek-ai/dsh");
     console.error("  或用 --target <@deepseek-ai依赖目录> 指定位置。");
     process.exit(1);
@@ -325,7 +364,8 @@ function run() {
   let fail = 0;
   for (const [label, file, patches] of [
     ["dsh-client-ui-workspace（未分组删除）", targets["dsh-client-ui-workspace"], WORKSPACE_PATCHES],
-    ["dsh-client-ui-layout（响应式详情列）", targets["dsh-client-ui-layout"], LAYOUT_PATCHES]
+    ["dsh-client-ui-layout（响应式详情列）", targets["dsh-client-ui-layout"], LAYOUT_PATCHES],
+    ["dsh-client-ui-deliverables（产物链接主区打开）", targets["dsh-client-ui-deliverables"], DELIVERABLES_PATCHES]
   ]) {
     console.log(`== ${label} ==`);
     console.log(`  文件： ${file}`);
