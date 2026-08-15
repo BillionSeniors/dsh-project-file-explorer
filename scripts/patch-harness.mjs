@@ -73,8 +73,10 @@ function dshHome() {
  *  不写死盘符 —— 插件拷贝到 C:/D:/E: 等任意盘符的 dsh 安装上都能找到目标。 */
 function candidateDirs() {
   const dirs = [];
-  // Windows 下 Node 无法直接 spawn .cmd，必须 shell:true 才能执行 npm.cmd。
-  const g = spawnSync(process.platform === "win32" ? "npm.cmd" : "npm", ["root", "-g"], { encoding: "utf8", shell: process.platform === "win32" });
+  // Windows 下 Node 无法直接 spawn .cmd，经 cmd.exe /c 执行（避免 shell:true 的弃用警告）。
+  const g = process.platform === "win32"
+    ? spawnSync("cmd.exe", ["/d", "/s", "/c", "npm root -g"], { encoding: "utf8" })
+    : spawnSync("npm", ["root", "-g"], { encoding: "utf8" });
   if (g.status === 0) {
     const root = g.stdout.trim();
     dirs.push(join(root, "@deepseek-ai"));

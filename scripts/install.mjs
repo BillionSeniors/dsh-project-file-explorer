@@ -64,6 +64,8 @@ console.log("  已复制 lib / scripts / example / package.json / README.md / LI
 
 // ---- ② 注册到 cordis.patch.yml ----
 console.log(`== 注册插件： ${patchYml}`);
+// 新用户/全新 DSH_HOME 可能还没有 profiles/web 目录，先创建，避免写文件失败。
+mkdirSync(dirname(patchYml), { recursive: true });
 let yml = "";
 if (existsSync(patchYml)) yml = readFileSync(patchYml, "utf8");
 if (yml.includes(pluginName)) {
