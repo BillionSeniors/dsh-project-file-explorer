@@ -279,6 +279,15 @@ const detailsSession = useSessions((s) => s.current);`
 const mobileDrawer = cols.details === 0 && panels.details > 0;`
   },
   {
+    // 修复：无会话（首页/删除全部工作区后）时 details 槽（scope: session）渲染为空，
+    // 此时 mobileDrawer 为 true 会画出空白固定面板 + 全屏遮罩（z-29/30），盖住
+    // 首页的项目文件浮层（shell.overlay z-20）。抽屉降级只在有会话时才有意义。
+    marker: "dsh-project-file-explorer: layout-mobiledrawer-nosession",
+    find: `const mobileDrawer = cols.details === 0 && panels.details > 0;`,
+    replace: `/* dsh-project-file-explorer: layout-mobiledrawer-nosession —— 仅在有会话时渲染；无会话时 details 槽（scope: session）渲染为空，空白面板 + 全屏遮罩会盖住首页的项目文件浮层 */
+const mobileDrawer = detailsSession !== void 0 && cols.details === 0 && panels.details > 0;`
+  },
+  {
     marker: "dsh-project-file-explorer: layout-col-conditional",
     find: `(0, react_jsx_runtime.jsxs)(react_jsx_runtime.Fragment, { children: [(0, react_jsx_runtime.jsx)(CenterColumn, { children: renderSlot("conversation", {}) }), (0, react_jsx_runtime.jsx)(DetailsColumn, { children: renderSlot("details", {}) })] }),`,
     replace: `/* dsh-project-file-explorer: layout-col-conditional —— 窄屏时详情列不占网格 */
