@@ -63,16 +63,23 @@ function applyPatch(filePath, { marker, find, replace }) {
   return { status: "applied", detail: "" };
 }
 
+/** dsh 数据根目录：优先 $DSH_HOME，否则默认 ~/.dsh */
+function dshHome() {
+  const env = process.env.DSH_HOME?.trim();
+  return env ? resolve(env) : join(homedir(), ".dsh");
+}
+
 /** 定位 @deepseek-ai 依赖目录（包含目标两个包）。 */
 function candidateDirs() {
   const dirs = [];
-  const g = spawnSync(process.platform === "win32" ? "npm.cmd" : "npm", ["root", "-g"], { encoding: "utf8" });
+  // Windows 下 Node 无法直接 spawn .cmd，必须 shell:true 才能执行 npm.cmd。
+  const g = spawnSync(process.platform === "win32" ? "npm.cmd" : "npm", ["root", "-g"], { encoding: "utf8", shell: process.platform === "win32" });
   if (g.status === 0) {
     const root = g.stdout.trim();
     dirs.push(join(root, "@deepseek-ai"));
     dirs.push(join(root, "@deepseek-ai", "dsh", "node_modules", "@deepseek-ai"));
   }
-  const profile = join(homedir(), ".dsh", "profiles", "web", "node_modules", "@deepseek-ai");
+  const profile = join(dshHome(), "profiles", "web", "node_modules", "@deepseek-ai");
   dirs.push(profile);
   if (explicitTarget) dirs.push(explicitTarget);
   return dirs;

@@ -27,14 +27,15 @@ import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url)); // <repo>/scripts
 const ROOT = resolve(HERE, ".."); // <repo>
-const home = homedir();
+// dsh 数据根目录：优先 $DSH_HOME（支持自定义安装位置），否则默认 ~/.dsh
+const home = (process.env.DSH_HOME?.trim() || join(homedir(), ".dsh"));
 
 // ---- 参数解析 ----
 const flag = (name) => {
   const i = process.argv.indexOf(name);
   return i !== -1 ? process.argv[i + 1] : null;
 };
-const profileDir = flag("--profile") ? resolve(flag("--profile")) : join(home, ".dsh", "profiles", "web");
+const profileDir = flag("--profile") ? resolve(flag("--profile")) : join(home, "profiles", "web");
 const explicitTarget = flag("--target") ? resolve(flag("--target")) : null;
 const skipPatch = process.argv.includes("--skip-patch");
 
